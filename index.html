@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POLY//TRACK v3 - Insider Scanner</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Paleta Clean Monocromática */
+  --bg-main: #121418;       /* Fundo Principal - Cinza Chumbo Escuro */
+  --bg-card: #1a1d22;       /* Fundo dos Cards/Sidebar */
+  --bg-input: #23272e;      /* Fundo de Inputs */
+  
+  --border: #2d323b;        /* Bordas Sutis */
+  --border-focus: #404652;  /* Borda em Foco */
+
+  --text-main: #e6e9ef;     /* Texto Principal - Off-White */
+  --text-muted: #9ba3b1;    /* Texto Secundário/Muted */
+  --text-darker: #6c7685;   /* Texto Muito Muted/Placeholders */
+
+  --accent: #10b981;        /* Destaque - Verde Esmeralda Suave (Ações Positivas) */
+  --accent-hover: #059669;  
+  --accent-glow: rgba(16, 185, 129, 0.15);
+
+  --red: #ef4444;           /* Status Negativo */
+  --yellow: #f59e0b;        /* Status Alerta */
+  --blue: #3b82f6;          /* Status Info */
+
+  --font-base: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-base);
+  font-size: 13px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text-main);
+}
+.logo em { color: var(--accent); font-style: normal; font-weight: 700; }
+.logo-ver { font-size: 10px; color: var(--text-darker); font-weight: 300; margin-left: 8px; }
+
+.hdr-right { display: flex; align-items: center; gap: 12px; }
+
+#clock { font-size: 11px; color: var(--text-darker); font-weight: 300; }
+
+.hdr-btn {
+  padding: 6px 14px; border: 1px solid var(--border); background: var(--bg-input);
+  color: var(--text-muted); font-family: var(--font-base); font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; text-transform: uppercase; border-radius: 4px;
+  transition: all .2s ease;
+}
+.hdr-btn:hover { border-color: var(--border-focus); color: var(--text-main); background: #2a2f38; }
+.hdr-btn.danger:hover { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.08); }
+
+/* ── LAYOUT ── */
+#app { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 320px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  padding: 16px 0;
+}
+
+.sb-section {
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.sb-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--text-darker);
+  text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* Botão de Scan Principal */
+.scan-btn {
+  width: 100%; padding: 12px;
+  background: var(--accent); color: white;
+  border: none; border-radius: 6px;
+  font-family: var(--font-base); font-size: 12px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s ease;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+.scan-btn:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+.scan-btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+
+/* search */
+.search-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+input[type=text] {
+  flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+  color: var(--text-main); font-family: var(--font-base); font-size: 12px;
+  padding: 8px 12px; outline: none; transition: all .2s ease;
+  min-width: 0; border-radius: 4px;
+}
+input[type=text]::placeholder { color: var(--text-darker); }
+input[type=text]:focus { border-color: var(--accent); background: #262a31; box-shadow: 0 0 0 2px var(--accent-glow); }
+
+.sb-btn {
+  padding: 8px 14px; border: 1px solid var(--border); background: var(--bg-input);
+  color: var(--text-muted); font-family: var(--font-base); font-size: 11px;
+  cursor: pointer; white-space: nowrap; border-radius: 4px;
+  text-transform: uppercase; transition: all .2s ease; flex-shrink: 0;
+}
+.sb-btn:hover { border-color: var(--border-focus); color: var(--text-main); background: #2a2f38; }
+
+/* wallet list */
+#walletList { flex: 1; overflow-y: auto; padding-top: 8px; border-top: 1px solid var(--border); }
+
+.w-item {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .15s ease;
+  position: relative; padding: 12px 20px;
+}
+.w-item:hover { background: rgba(255,255,255,0.02); }
+.w-item.active { background: rgba(16, 185, 129, 0.05); border-left: 3px solid var(--accent); padding-left: 17px; }
+
+.wi-body { flex: 1; min-width: 0; }
+.wi-tag { font-size: 11px; font-weight: 500; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wi-tag.insider-tag { color: var(--accent); } /* Destaque para insiders escaneados */
+.wi-addr { font-size: 10px; color: var(--text-muted); font-weight: 300; }
+
+.wi-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.wi-pnl { font-size: 11px; font-weight: 600; }
+.wi-winrate { font-size: 9px; color: var(--text-darker); padding: 1px 5px; background: var(--bg-input); border-radius: 3px; }
+
+.wi-del {
+  padding: 10px; color: var(--text-darker); font-size: 14px;
+  opacity: 0; transition: all .2s ease;
+  background: none; border: none; cursor: pointer; font-family: inherit; margin-left: 10px;
+}
+.w-item:hover .wi-del { opacity: 1; color: var(--text-muted); }
+.wi-del:hover { color: var(--red) !important; opacity: 1 !important; background: rgba(239, 68, 68, 0.1); border-radius: 4px; }
+
+/* search results dropdown */
+#searchResults {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
+  margin-top: 4px; display: none; max-height: 200px; overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 5; position: relative;
+}
+.sr-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .15s ease; font-size: 12px; }
+.sr-item:hover { background: rgba(255,255,255,0.03); }
+.sr-item:last-child { border-bottom: none; }
+.sr-name { color: var(--text-main); font-weight: 500; margin-bottom: 2px; }
+.sr-addr { color: var(--text-darker); font-size: 10px; }
+
+/* ── MAIN ── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main); }
+
+/* tabs */
+#tabs {
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card); padding: 0 24px; height: 48px; flex-shrink: 0;
+  gap: 8px;
+}
+
+.tab {
+  padding: 8px 16px; font-family: var(--font-base);
+  font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 500;
+  border: none; background: none; color: var(--text-muted); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all .2s ease; height: 100%;
+  display: flex; align-items: center;
+}
+.tab:hover { color: var(--text-main); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.tabs-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.wallet-pill { font-size: 10px; color: var(--text-main); padding: 4px 12px; border: 1px solid var(--border); background: var(--bg-input); border-radius: 20px; font-weight: 300; }
+
+/* content */
+#content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* stats grid */
+.stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+
+.scard { border: 1px solid var(--border); padding: 16px 20px; background: var(--bg-card); border-radius: 8px; transition: border-color .2s ease; }
+.scard:hover { border-color: var(--border-focus); }
+.sc-label { font-size: 10px; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 500; }
+.sc-val { font-size: 24px; font-weight: 600; color: var(--text-main); }
+.sc-sub { font-size: 10px; color: var(--text-darker); margin-top: 4px; font-weight: 300; }
+
+/* filter bar */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.filter-btn { padding: 5px 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-muted); font-family: var(--font-base); font-size: 10px; cursor: pointer; transition: all .2s ease; text-transform: uppercase; border-radius: 4px; }
+.filter-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
+.filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(16, 185, 129, 0.05); font-weight: 600; }
+.filter-search { margin-left: auto; width: 240px; }
+
+/* table */
+.tbl-wrap { border: 1px solid var(--border); overflow: hidden; border-radius: 8px; background: var(--bg-card); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th { padding: 12px 16px; text-align: left; font-size: 10px; letter-spacing: 1px; color: var(--text-darker); text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01); font-weight: 500; cursor: pointer; user-select: none; transition: color .2s ease; }
+thead th:hover { color: var(--text-main); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .12s ease; }
+tbody tr:hover { background: rgba(255,255,255,0.015); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 12px 16px; color: var(--text-muted); vertical-align: middle; }
+
+.badge { display: inline-block; padding: 2px 8px; font-size: 9px; text-transform: uppercase; font-weight: 600; border-radius: 3px; letter-spacing: 0.5px; }
+.badge.won { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge.lost { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
+.badge.open { background: rgba(245, 158, 11, 0.1); color: var(--yellow); border: 1px solid rgba(245, 158, 11, 0.2); }
+
+.market-name { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); font-weight: 400; }
+.pnl-pos { color: var(--accent); font-weight: 500; }
+.pnl-neg { color: var(--red); font-weight: 500; }
+
+/* empty / loading */
+.state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 24px; gap: 16px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; background: var(--bg-card); margin: 20px; }
+.state-title { font-size: 16px; font-weight: 500; color: var(--text-muted); letter-spacing: 1px; }
+.state-sub { font-size: 12px; color: var(--text-darker); line-height: 1.6; max-width: 400px; font-weight: 300; }
+
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* log bar */
+#logbar { border-top: 1px solid var(--border); height: 36px; display: flex; align-items: center; padding: 0 24px; gap: 10px; background: var(--bg-card); flex-shrink: 0; font-size: 11px; color: var(--text-darker); }
+.log-prompt { color: var(--accent); font-weight: 700; }
+#logmsg { animation: logfade .3s ease; font-weight: 300; }
+@keyframes logfade { from { opacity: 0; } to { opacity: 1; } }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-focus); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-darker); }
+
+/* toast */
+#toast { position: fixed; bottom: 56px; right: 24px; background: var(--bg-card); border: 1px solid var(--border-focus); padding: 12px 20px; font-size: 12px; color: var(--text-main); opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; z-index: 999; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); transform: translateY(10px); }
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { border-left: 3px solid var(--accent); color: var(--accent); }
+#toast.error { border-left: 3px solid var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo">POLY//<em>TRACK</em> <span class="logo-ver">v3.0 CLEAN</span></div>
+  <div class="hdr-right">
+    <span id="clock"></span>
+    <button class="hdr-btn" onclick="exportCache()">Export Cache</button>
+    <button class="hdr-btn danger" onclick="clearAllCache()">Clear Cache</button>
+  </div>
+</div>
+
+<div id="app">
+
+  <div id="sidebar">
+
+    <div class="sb-section" style="margin-bottom: 20px;">
+        <button class="scan-btn" id="mainScanBtn" onclick="runInsiderScan()">
+            <span class="scan-icon">📡</span>
+            <span id="scanBtnText">Scan Insider Whales</span>
+        </button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Manually Add Profile</div>
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="username or 0x..." oninput="onSearchInput()">
+        <button class="sb-btn" onclick="searchProfile()" id="searchBtn">Find</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+    <div class="sb-label" style="padding: 0 20px; margin-bottom: 8px;">Watchlist / Radar</div>
+    <div id="walletList"></div>
+  </div>
+
+  <div id="main">
+    <div id="tabs">
+      <button class="tab active" data-tab="positions" onclick="switchTab('positions')">Overview</button>
+      <button class="tab" data-tab="activity" onclick="switchTab('activity')">Recent Activity</button>
+      <div class="tabs-right">
+        <span class="wallet-pill" id="activeWalletPill">No Wallet Selected</span>
+        <button class="hdr-btn" id="refreshBtn" onclick="refreshCurrent()" style="display:none; padding: 5px 10px;">↻ Refresh</button>
+      </div>
+    </div>
+    <div id="content">
+      <div class="state-box">
+        <div class="spinner" style="display:none;" id="mainLoader"></div>
+        <div class="state-title" id="stateTitle">Select a Wallet</div>
+        <div class="state-sub" id="stateSub">
+            Use o botão "Scan Insider Whales" para encontrar carteiras de alta precisão automaticamente, ou pesquise um perfil manualmente à esquerda.
+        </div>
+      </div>
+    </div>
+    <div id="logbar">
+      <span class="log-prompt">›</span>
+      <span id="logmsg">Terminal inicializado. Pronto para varredura.</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── CONFIGURAÇÃO ───────────────────────────────────────────────────────────
+// *** IMPORTANTE: Substitua pela URL real do seu deploy no Vercel ***
+const VERCEL_API_URL = 'https://SEU-PROJETO-NO-VERCEL.vercel.app/api/scan';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const CACHE_KEY = 'polytrack_v3_clean';
+let state = {
+  wallets: [], // Estrutura: { addr, label, isInsider:true/false, winRate, data: null, ts: null }
+  active: null,
+  tab: 'positions',
+  filter: 'all',
+  search: '',
+};
+
+// load from localStorage
+function loadState() {
+  try {
+    const s = localStorage.getItem(CACHE_KEY);
+    if (s) {
+      const parsed = JSON.parse(s);
+      if (parsed.wallets) state.wallets = parsed.wallets;
+      if (parsed.active !== undefined) state.active = parsed.active;
+    }
+  } catch(e) { console.error("Erro ao carregar cache", e); }
+}
+
+function saveState() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ wallets: state.wallets, active: state.active })); } catch(e) {}
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function log(msg) {
+  const el = document.getElementById('logmsg');
+  el.textContent = msg; el.style.animation = 'none';
+  el.offsetHeight; el.style.animation = 'logfade .3s ease';
+}
+
+function showToast(msg, type = 'success', dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`; // reset classes e adiciona show + tipo
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function shortAddr(a) { return a ? a.slice(0,6)+'...'+a.slice(-4) : ''; }
+
+function fmtPnl(n) {
+  if (isNaN(n) || n === null) return '—';
+  const abs = Math.abs(n).toLocaleString('en',{maximumFractionDigits:0});
+  return (n >= 0 ? '+ $' : '- $') + abs;
+}
+
+function fmtUSD(n) {
+  if (isNaN(n) || n === null || n === undefined) return '—';
+  return '$ ' + parseFloat(n).toLocaleString('en',{maximumFractionDigits:0});
+}
+
+function pct(n) { return isNaN(n) || n === null ? '—' : parseFloat(n).toFixed(1)+'%'; }
+
+// ─── CLOCK ───────────────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';
+}, 1000);
+
+// ─── FUNÇÃO PRINCIPAL: RUN INSIDER SCAN (CONEXÃO VERCEL) ──────────────────────
+async function runInsiderScan() {
+    const btn = document.getElementById('mainScanBtn');
+    const btnText = document.getElementById('scanBtnText');
+    const logEl = document.getElementById('logmsg');
+    
+    btn.disabled = true;
+    btnText.textContent = "Scanning Polymarket...";
+    log("Iniciando varredura de Insiders via Vercel API...");
+    showLoadingState("Escaneando Polymarket", "Isso pode levar até 15 segundos. Estamos cruzando o leaderboard semanal com o histórico individual das baleias.");
+
+    try {
+        const response = await fetch(VERCEL_API_URL);
+        
+        if (!response.ok) throw new Error(`Erro na API: ${response.status}`);
+        
+        const result = await response.json();
+        
+        if (result.success && result.insidersEncontrados) {
+            const novosInsiders = result.insidersEncontrados;
+            let adicionadosCount = 0;
+
+            novosInsiders.forEach(insider => {
+                // Verifica se já existe na lista
+                if (!state.wallets.find(w => w.addr.toLowerCase() === insider.address.toLowerCase())) {
+                    state.wallets.push({
+                        addr: insider.address,
+                        label: `BALEIA ${shortAddr(insider.address)}`,
+                        isInsider: true, // Marcação visual
+                        winRate: insider.winRate,
+                        data: null, // Dados detalhados serão puxados ao clicar
+                        ts: null
+                    });
+                    adicionadosCount++;
+                }
+            });
+
+            saveState();
+            renderWalletList();
+            
+            if (adicionadosCount > 0) {
+                showToast(`Scan completo! Encontradas ${novosInsiders.length} baleias de alta precisão. ${adicionadosCount} novas adicionadas ao radar.`, 'success', 5000);
+                log(`✓ Scan finalizado. ${adicionadosCount} novas carteiras identificadas.`);
+                // Seleciona a primeira nova carteira encontrada
+                const index = state.wallets.findIndex(w => w.addr === novosInsiders[0].address);
+                if (index !== -1) selectWallet(index);
+            } else {
+                showToast(`Scan completo. Nenhuma nova baleia encontrada além das que já estão no seu radar.`, 'success');
+                log(`✓ Scan finalizado. Nenhuma novidade encontrada.`);
+                setInitialState();
+            }
+
+        } else {
+            throw new Error("Formato de resposta inválido da API.");
+        }
+
+    } catch (error) {
+        console.error(error);
+        log(`✗ Erro no Scan: ${error.message}`);
+        showToast(`Falha na conexão com o motor de busca no Vercel. Verifique a URL e se a função está rodando.`, 'error', 5000);
+        setInitialState();
+    } finally {
+        btn.disabled = false;
+        btnText.textContent = "Scan Insider Whales";
+    }
+}
+
+
+// ─── WALLET LIST RENDER ──────────────────────────────────────────────────────
+function renderWalletList() {
+  const el = document.getElementById('walletList');
+  if (!state.wallets.length) {
+    el.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-darker);font-size:11px; font-weight:300; line-height:1.5;">Nenhuma carteira monitorada.<br>Use o Scan acima para começar.</div>';
+    return;
+  }
+  
+  // Ordena: Insiders no topo, depois por ordem de adição
+  const sortedWallets = [...state.wallets].map((w, index) => ({...w, originalIndex: index}));
+  sortedWallets.sort((a, b) => (b.isInsider === a.isInsider) ? 0 : b.isInsider ? 1 : -1);
+
+  el.innerHTML = sortedWallets.map((w) => {
+    const active = state.active === w.originalIndex ? ' active' : '';
+    const labelClass = w.isInsider ? 'wi-tag insider-tag' : 'wi-tag';
+    const labelPrefix = w.isInsider ? '📡 ' : '';
+
+    return `<div class="w-item${active}" onclick="selectWallet(${w.originalIndex})">
+      <div class="wi-body">
+        <div class="${labelClass}">${labelPrefix}${w.label || 'Sem Nome'}</div>
+        <div class="wi-addr">${shortAddr(w.addr)}</div>
+      </div>
+      <div class="wi-right">
+        ${w.isInsider && w.winRate ? `<div class="wi-winrate">${w.winRate} WR</div>` : ''}
+      </div>
+      <button class="wi-del" onclick="event.stopPropagation();deleteWallet(${w.originalIndex})" title="Remover">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function selectWallet(i) {
+  state.active = i;
+  saveState();
+  renderWalletList();
+  const w = state.wallets[i];
+  
+  document.getElementById('activeWalletPill').textContent = w.label || shortAddr(w.addr);
+  document.getElementById('refreshBtn').style.display = '';
+
+  if (w.data && w.ts && (Date.now() - w.ts < 5 * 60 * 1000)) { // Cache de 5 minutos
+    log(`Carregado do cache: ${w.data.length} transações recentes.`);
+    renderContent();
+  } else {
+    fetchWalletDetailedData(i);
+  }
+}
+
+// ─── FETCH DETALHADO (DIRECT FROM POLYMARKET DATA-API) ──────────────────────
+// Usamos direto aqui pois é uma requisição única por clique, o risco de bloqueio é menor
+// e o Vercel tem timeout curto para puxar históricos longos.
+async function fetchWalletDetailedData(i, force = false) {
+  const w = state.wallets[i];
+  
+  showLoadingState("Puxando Detalhes", `Conectando à data-api.polymarket.com para obter o histórico de ${shortAddr(w.addr)}...`);
+  log(`Buscando histórico detalhado de ${shortAddr(w.addr)}...`);
+  document.getElementById('refreshBtn').disabled = true;
+
+  try {
+    // Puxa as últimas 200 atividades para análise detalhada no front
+    const url = `https://data-api.polymarket.com/activity?user=${w.addr}&limit=200`;
+    const res = await fetch(url);
+    
+    if (!res.ok) {
+        if(res.status === 429) throw new Error("Rate limit da Polymarket. Aguarde um pouco.");
+        throw new Error(`Erro HTTP ${res.status}`);
+    }
+    
+    const data = await res.json();
+    const activities = Array.isArray(data) ? data : (data.data || []);
+
+    w.data = activities;
+    w.ts = Date.now();
+    saveState();
+    
+    log(`✓ ${w.data.length} registros obtidos para ${w.label}.`);
+    renderContent();
+  
+  } catch(e) {
+    log(`✗ Erro ao buscar detalhes: ${e.message}`);
+    showErrorState("Falha ao Obter Dados", `Não conseguimos conectar à API da Polymarket ou a carteira não tem atividade recente. Erro: ${e.message}`);
+  } finally {
+    document.getElementById('refreshBtn').disabled = false;
+  }
+}
+
+// ─── ADD / DELETE MANUAL ─────────────────────────────────────────────────────
+function deleteWallet(i) {
+  if(!confirm("Remover esta carteira do radar?")) return;
+  state.wallets.splice(i, 1);
+  if (state.active === i) { state.active = null; setInitialState(); }
+  else if (state.active > i) state.active--;
+  saveState();
+  renderWalletList();
+  showToast('Carteira removida.');
+}
+
+// ─── SEARCH PROFILE MANUAL (Gamma API) ───────────────────────────────────────────
+let searchTimeout;
+function onSearchInput() {
+  clearTimeout(searchTimeout);
+  const v = document.getElementById('searchInput').value.trim();
+  if (!v) { document.getElementById('searchResults').style.display = 'none'; return; }
+  searchTimeout = setTimeout(() => searchProfile(), 500);
+}
+
+async function searchProfile() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  const el = document.getElementById('searchResults');
+  el.style.display = 'block';
+  el.innerHTML = '<div class="sr-item" style="color:var(--text-darker); text-align:center;">Buscando...</div>';
+
+  try {
+    let results = [];
+    // Se parece endereço, busca direto
+    if (q.startsWith('0x') && q.length > 30) {
+        const res = await fetch(`https://gamma-api.polymarket.com/profiles?address=${q}`);
+        if(res.ok) {
+            const p = await res.json();
+            if(p && p.address) results = [p];
+        }
+    } else {
+        // Busca por username
+        const res = await fetch(`https://gamma-api.polymarket.com/profiles?username=${encodeURIComponent(q)}&limit=5`);
+        if(res.ok) results = await res.json();
+    }
+
+    renderSearchResults(results);
+  } catch(e) {
+    el.innerHTML = `<div class="sr-item" style="color:var(--red); font-size:11px;">Erro na busca.</div>`;
+  }
+}
+
+function renderSearchResults(results) {
+  const el = document.getElementById('searchResults');
+  if (!results || !results.length) { el.innerHTML = '<div class="sr-item" style="color:var(--text-darker); text-align:center;">Nenhum perfil encontrado.</div>'; return; }
+  
+  el.innerHTML = results.slice(0,5).map(p => {
+    const addr = p.address;
+    const name = p.name || p.username || shortAddr(addr);
+    return `<div class="sr-item" onclick="addFromSearch('${addr}','${name.replace(/'/g,"\\'")}')">
+      <div class="sr-name">${name}</div>
+      <div class="sr-addr">${shortAddr(addr)}</div>
+    </div>`;
+  }).join('');
+}
+
+function addFromSearch(addr, name) {
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('searchInput').value = '';
+  
+  if (state.wallets.find(w => w.addr.toLowerCase() === addr.toLowerCase())) {
+    showToast('Carteira já está na lista.', 'error'); return;
+  }
+  
+  state.wallets.push({ addr, label: name.toUpperCase(), isInsider: false, data: null, ts: null });
+  saveState();
+  renderWalletList();
+  selectWallet(state.wallets.length - 1);
+  showToast('Carteira adicionada manualmente.');
+}
+
+// ─── TABS & NAVIGATION ───────────────────────────────────────────────────────
+function switchTab(t) {
+  state.tab = t;
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+  if (state.active !== null) renderContent();
+}
+
+function refreshCurrent() {
+  if (state.active === null) return;
+  fetchWalletDetailedData(state.active, true);
+}
+
+// ─── RENDER STATES (LOADING, ERROR, INITIAL) ──────────────────────────────────
+function setInitialState() {
+    document.getElementById('activeWalletPill').textContent = 'No Wallet Selected';
+    document.getElementById('refreshBtn').style.display = 'none';
+    document.getElementById('content').innerHTML = `
+      <div class="state-box">
+        <div class="state-title">Select a Wallet</div>
+        <div class="state-sub">Use o botão "Scan Insider Whales" para iniciar o radar automático ou adicione um endereço manualmente.</div>
+      </div>`;
+}
+
+function showLoadingState(title, sub) {
+    document.getElementById('content').innerHTML = `
+      <div class="state-box">
+        <div class="spinner"></div>
+        <div class="state-title">${title}</div>
+        <div class="state-sub">${sub}</div>
+      </div>`;
+}
+
+function showErrorState(title, sub) {
+    document.getElementById('content').innerHTML = `
+      <div class="state-box" style="border-color: var(--red);">
+        <div class="state-title" style="color: var(--red);">${title}</div>
+        <div class="state-sub">${sub}</div>
+      </div>`;
+}
+
+// ─── RENDER CONTENT (OVERVIEW / ACTIVITY) ──────────────────────────────────────
+function renderContent() {
+  if (state.active === null) return;
+  const w = state.wallets[state.active];
+  if (!w?.data) return;
+  
+  if (state.tab === 'positions') renderOverview(w);
+  else renderActivity(w.data);
+}
+
+// ── TAB 1: OVERVIEW (Stats + Markets) ──
+function renderOverview(wallet) {
+  const data = wallet.data;
+  
+  // Agregação por mercado para calcular PnL e WinRate real do histórico puxado
+  const markets = {};
+  let totalPnl = 0;
+  let totalInvested = 0;
+
+  data.forEach(t => {
+    const key = t.slug || t.title || 'unknown';
+    if (!markets[key]) markets[key] = { title: t.title || key, pnl: 0, invested: 0, outcome: 'open', lastTs: 0 };
+    
+    const m = markets[key];
+    const pnl = parseFloat(t.cashPnl ?? 0);
+    const invested = parseFloat(t.cashInvested ?? 0);
+    const ts = t.timestamp ? t.timestamp * 1000 : 0;
+
+    m.pnl += pnl;
+    m.invested += invested;
+    if(ts > m.lastTs) m.lastTs = ts;
+
+    totalPnl += pnl;
+    totalInvested += invested;
+
+    const oc = (t.outcome||'').toLowerCase();
+    if (oc === 'won') m.outcome = 'won';
+    else if (oc === 'lost' && m.outcome !== 'won') m.outcome = 'lost';
+  });
+
+  const marketRows = Object.values(markets);
+  const wins = marketRows.filter(r => r.outcome === 'won').length;
+  const losses = marketRows.filter(r => r.outcome === 'lost').length;
+  const currentWR = wins+losses > 0 ? (wins/(wins+losses)*100) : null;
+
+  // Ordena mercados por PnL desc
+  marketRows.sort((a,b) => b.pnl - a.pnl);
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats-grid">
+      <div class="scard"><div class="sc-label">Total PnL (Recente)</div>
+        <div class="sc-val ${totalPnl>=0?'pnl-pos':'pnl-neg'}">${fmtPnl(totalPnl)}</div>
+        <div class="sc-sub">Baseado nas últimas 200 txs</div>
+      </div>
+      <div class="scard"><div class="sc-label">Win Rate Real</div>
+        <div class="sc-val" style="color:var(--yellow)">${currentWR !== null ? pct(currentWR) : '—'}</div>
+        <div class="sc-sub">${wins}W / ${losses}L mercados fechados</div>
+      </div>
+       <div class="scard"><div class="sc-label">Volume Movimentado</div>
+        <div class="sc-val">${fmtUSD(totalInvested)}</div>
+      </div>
+      <div class="scard"><div class="sc-label">Status Radar</div>
+        <div class="sc-val ${wallet.isInsider?'pnl-pos':''}" style="font-size:14px; text-transform:uppercase; letter-spacing:1px;">
+            ${wallet.isInsider ? '📡 CONFIRMED WR '+wallet.winRate : '👤 MANUAL TRACK'}
+        </div>
+      </div>
+      <div class="scard"><div class="sc-label">Última Atualização</div>
+        <div class="sc-val" style="font-size:16px;">${new Date(wallet.ts).toLocaleTimeString()}</div>
+      </div>
+    </div>
+
+    <div class="sb-label" style="margin-bottom: 12px;">Desempenho por Mercado (Histórico Recente)</div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Mercado</th>
+            <th>Investido</th>
+            <th>PnL</th>
+            <th>Última Atividade</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${marketRows.length === 0 ? `<tr><td colspan="5" style="text-align:center;color:var(--text-darker);padding:40px">Nenhuma atividade de trade encontrada.</td></tr>` :
+            marketRows.map(r => `<tr>
+              <td><span class="badge ${r.outcome}">${r.outcome}</span></td>
+              <td><div class="market-name" title="${r.title}">${r.title}</div></td>
+              <td>${fmtUSD(r.invested)}</td>
+              <td class="${r.pnl>=0?'pnl-pos':'pnl-neg'}">${fmtPnl(r.pnl)}</td>
+              <td style="color:var(--text-darker); font-size:11px;">${r.lastTs ? new Date(r.lastTs).toLocaleDateString() : '—'}</td>
+            </tr>`).join('')
+          }
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── TAB 2: ACTIVITY (Tabela de Transações) ──
+function renderActivity(data) {
+  // Pega as últimas 100 transações e inverte para mostrar as mais recentes no topo
+  const rows = [...data].slice(0, 100);
+  
+  document.getElementById('content').innerHTML = `
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Tipo</th><th>Mercado</th><th>Lado</th><th>Preço</th><th>Valor</th><th>PnL Ação</th><th>Horário (Local)</th>
+        </tr></thead>
+        <tbody>
+          ${rows.length === 0 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-darker);padding:40px">Nenhum registro de atividade.</td></tr>` :
+           rows.map(t => {
+            const type = (t.type || t.action || '—').toUpperCase();
+            const side = t.side || (t.outcomeIndex === 0 ? 'YES' : 'NO');
+            const price = parseFloat(t.price ?? 0);
+            const size = parseFloat(t.size ?? 0);
+            const amount = parseFloat(t.amount ?? t.cashInvested ?? 0);
+            const pnl = parseFloat(t.cashPnl ?? 0);
+            const ts = t.timestamp * 1000;
+            
+            let typeColor = 'var(--text-muted)';
+            if(type.includes('BUY')) typeColor = 'var(--text-main)';
+            if(type.includes('SELL')) typeColor = 'var(--yellow)';
+            if(type.includes('REDEEM')) typeColor = 'var(--blue)';
+
+            return `<tr>
+              <td style="color:${typeColor}; font-weight:500; font-size:10px; letter-spacing:0.5px;">${type}</td>
+              <td><div class="market-name" title="${t.title}">${t.title || '—'}</div></td>
+              <td style="color:${side==='YES'?'var(--accent)':'var(--red)'}; font-weight:600;">${side}</td>
+              <td>${price > 0 ? (price*100).toFixed(1)+'¢' : '—'}</td>
+              <td>${amount > 0 ? fmtUSD(amount) : (size > 0 ? size.toFixed(0) + ' cotas' : '—')}</td>
+              <td class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pnl !== 0 ? fmtPnl(pnl) : '—'}</td>
+              <td style="color:var(--text-darker); font-size:11px;">${ts ? new Date(ts).toLocaleString() : '—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ─── CACHE MANAGEMENT ────────────────────────────────────────────────────────
+function exportCache() {
+  const blob = new Blob([JSON.stringify({ wallets: state.wallets, exported: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `polytrack-radar-${Date.now()}.json`;
+  a.click();
+  showToast('Cache exportado com sucesso.');
+}
+
+function clearAllCache() {
+  if (!confirm('Deseja limpar TODO o cache? Isso removerá todas as carteiras do radar e histórico salvo.')) return;
+  localStorage.removeItem(CACHE_KEY);
+  state.wallets = [];
+  state.active = null;
+  renderWalletList();
+  setInitialState();
+  showToast('Cache limpo.', 'error');
+  log("Cache local limpo pelo usuário.");
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+    loadState();
+    renderWalletList();
+    if (state.active !== null && state.wallets[state.active]) {
+        selectWallet(state.active);
+    } else {
+        setInitialState();
+    }
+    log("Terminal pronto. Aguardando comando de scan.");
+})();
+
+</script>
+</body>
+</html>
